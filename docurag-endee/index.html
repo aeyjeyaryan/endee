@@ -2,144 +2,672 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>DocuRAG</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocuRAG — Test Console</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --border-hover: #3a3a3a;
+    --accent: #4ade80;
+    --accent-dim: rgba(74, 222, 128, 0.08);
+    --accent-mid: rgba(74, 222, 128, 0.25);
+    --text: #f0f0f0;
+    --text-secondary: #888;
+    --text-muted: #555;
+    --error: #f87171;
+    --error-dim: rgba(248, 113, 113, 0.08);
+  }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: monospace;
-    background: #f5f5f5;
-    color: #111;
-    max-width: 700px;
-    margin: 60px auto;
-    padding: 0 20px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: 56px 1fr;
+    font-size: 14px;
   }
 
-  h1 { font-size: 18px; margin-bottom: 32px; }
-  h1 span { color: #999; font-weight: normal; }
+  /* ── HEADER ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg);
+  }
 
-  section { margin-bottom: 32px; }
+  .logo {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text);
+  }
 
-  label { display: block; font-size: 12px; color: #999; margin-bottom: 6px; }
+  .logo-badge {
+    background: var(--accent);
+    color: #000;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+  }
 
-  input[type="file"] { font-size: 13px; }
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
 
-  button {
-    background: #111;
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    font-family: monospace;
-    font-size: 13px;
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: background 0.3s;
+  }
+
+  .status-dot.online { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .status-dot.offline { background: var(--error); }
+
+  /* ── LAYOUT ── */
+  main {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    overflow: hidden;
+    height: calc(100vh - 56px);
+  }
+
+  /* ── SIDEBAR ── */
+  aside {
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 18px 20px 10px;
+  }
+
+  /* ── UPLOAD ── */
+  .upload-area {
+    margin: 0 16px 12px;
+    border: 1.5px dashed var(--border-hover);
+    border-radius: 10px;
+    padding: 24px 16px;
+    text-align: center;
     cursor: pointer;
-    margin-top: 8px;
+    transition: all 0.2s;
+    position: relative;
+    background: var(--surface2);
   }
 
-  button:hover { background: #333; }
-  button:disabled { background: #ccc; cursor: not-allowed; }
+  .upload-area:hover, .upload-area.dragging {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .upload-area input {
+    position: absolute; inset: 0;
+    opacity: 0; cursor: pointer;
+    width: 100%; height: 100%;
+  }
+
+  .upload-icon { font-size: 22px; margin-bottom: 8px; }
+
+  .upload-area .upload-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .upload-area .upload-sub {
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .btn-ingest {
+    margin: 0 16px 16px;
+    padding: 10px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    width: calc(100% - 32px);
+    transition: all 0.15s;
+  }
+
+  .btn-ingest:hover { background: #22c55e; }
+  .btn-ingest:disabled { background: var(--surface2); color: var(--text-muted); cursor: not-allowed; border: 1px solid var(--border); }
+
+  .ingest-msg {
+    margin: -4px 16px 12px;
+    font-size: 12px;
+    min-height: 18px;
+    padding: 0 2px;
+  }
+
+  .ingest-msg.ok { color: var(--accent); }
+  .ingest-msg.err { color: var(--error); }
+
+  /* ── DOC LIST ── */
+  .doc-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 12px;
+  }
+
+  .doc-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 10px;
+    border-radius: 7px;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    cursor: default;
+  }
+
+  .doc-item:hover { background: var(--surface2); border-color: var(--border); }
+
+  .doc-icon { font-size: 14px; flex-shrink: 0; }
+
+  .doc-name {
+    flex: 1;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .doc-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-mid);
+    padding: 1px 6px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .btn-del {
+    background: none; border: none;
+    color: var(--text-muted); cursor: pointer;
+    font-size: 13px; padding: 2px 5px;
+    border-radius: 4px; transition: all 0.15s;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .btn-del:hover { color: var(--error); background: var(--error-dim); }
+
+  .empty-docs {
+    padding: 24px 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  /* ── STATS ── */
+  .stats {
+    border-top: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    gap: 24px;
+  }
+
+  .stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+
+  .stat-lbl {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--text-muted);
+  }
+
+  /* ── CHAT PANEL ── */
+  .chat-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+  }
+
+  .chat-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ── WELCOME ── */
+  .welcome {
+    margin: auto;
+    text-align: center;
+    max-width: 420px;
+  }
+
+  .welcome h2 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+
+  .welcome p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .suggestion {
+    padding: 7px 14px;
+    border: 1px solid var(--border-hover);
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--surface);
+  }
+
+  .suggestion:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  /* ── MESSAGES ── */
+  .msg { display: flex; flex-direction: column; gap: 6px; max-width: 700px; }
+  .msg.user { align-self: flex-end; align-items: flex-end; }
+  .msg.bot  { align-self: flex-start; align-items: flex-start; }
+
+  .bubble {
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.65;
+    max-width: 580px;
+  }
+
+  .msg.user .bubble {
+    background: var(--accent);
+    color: #000;
+    font-weight: 500;
+    border-bottom-right-radius: 3px;
+  }
+
+  .msg.bot .bubble {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-bottom-left-radius: 3px;
+  }
+
+  .msg-footer {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .source-tag {
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-mid);
+    color: var(--accent);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+
+  /* ── THINKING ── */
+  .thinking {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    border-bottom-left-radius: 3px;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+
+  .dots { display: flex; gap: 4px; }
+  .dots span {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: blink 1.2s infinite;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+
+  /* ── INPUT ── */
+  .input-bar {
+    border-top: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    background: var(--bg);
+  }
+
+  .input-box {
+    flex: 1;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    display: flex;
+    align-items: center;
+    transition: border-color 0.2s;
+  }
+
+  .input-box:focus-within { border-color: var(--accent); }
 
   textarea {
-    width: 100%;
-    padding: 10px;
-    font-family: monospace;
-    font-size: 13px;
-    border: 1px solid #ddd;
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
     resize: none;
-    background: #fff;
-    margin-bottom: 8px;
+    max-height: 100px;
+    line-height: 1.5;
   }
 
-  #answer {
-    background: #fff;
-    border: 1px solid #ddd;
-    padding: 14px;
-    font-size: 13px;
-    line-height: 1.7;
-    min-height: 80px;
-    white-space: pre-wrap;
-    color: #111;
+  textarea::placeholder { color: var(--text-muted); }
+
+  .btn-send {
+    width: 42px; height: 42px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 9px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
   }
 
-  #status { font-size: 12px; color: #999; margin-top: 6px; }
-  .ok { color: #2a9d2a; }
-  .err { color: #cc0000; }
+  .btn-send:hover { background: #22c55e; }
+  .btn-send:disabled { background: var(--surface2); cursor: not-allowed; }
 
-  hr { border: none; border-top: 1px solid #e0e0e0; margin: 32px 0; }
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg, .welcome { animation: fadeUp 0.25s ease; }
 </style>
 </head>
 <body>
 
-<h1>DocuRAG <span>/ test</span></h1>
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <span class="logo-badge">RAG</span>
+    DocuRAG
+    <span style="color:var(--text-muted); font-weight:400; font-size:13px;">/ test console</span>
+  </div>
+  <div class="status">
+    <div class="status-dot" id="dot"></div>
+    <span id="statusText">connecting...</span>
+  </div>
+</header>
 
-<!-- INGEST -->
-<section>
-  <label>INGEST DOCUMENT</label>
-  <input type="file" id="fileInput" accept=".pdf,.txt,.md">
-  <br>
-  <button onclick="ingest()" id="btnIngest">Upload & Ingest</button>
-  <div id="ingestStatus"></div>
-</section>
+<main>
 
-<hr>
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="section-title">Ingest</div>
 
-<!-- QUERY -->
-<section>
-  <label>ASK A QUESTION</label>
-  <textarea id="question" rows="3" placeholder="What is this document about?"></textarea>
-  <button onclick="query()" id="btnQuery">Ask</button>
-  <div id="status"></div>
-</section>
+    <div class="upload-area" id="uploadArea">
+      <input type="file" id="fileInput" accept=".pdf,.txt,.md">
+      <div class="upload-icon">📄</div>
+      <div class="upload-title" id="uploadTitle">Drop file or click to browse</div>
+      <div class="upload-sub">PDF · TXT · Markdown</div>
+    </div>
 
-<hr>
+    <button class="btn-ingest" id="btnIngest" onclick="ingest()" disabled>
+      Ingest Document
+    </button>
 
-<!-- ANSWER -->
-<section>
-  <label>ANSWER</label>
-  <div id="answer">—</div>
-</section>
+    <div class="ingest-msg" id="ingestMsg"></div>
+
+    <div class="section-title">Documents</div>
+
+    <div class="doc-list" id="docList">
+      <div class="empty-docs">No documents yet</div>
+    </div>
+
+    <div class="stats">
+      <div>
+        <div class="stat-val" id="sVectors">—</div>
+        <div class="stat-lbl">Vectors</div>
+      </div>
+      <div>
+        <div class="stat-val" id="sDocs">—</div>
+        <div class="stat-lbl">Docs</div>
+      </div>
+      <div>
+        <div class="stat-val" id="sDim">384</div>
+        <div class="stat-lbl">Dims</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CHAT -->
+  <div class="chat-panel">
+    <div class="chat-body" id="chatBody">
+      <div class="welcome" id="welcome">
+        <h2>Ask your documents</h2>
+        <p>Upload a file on the left, then ask any question. Answers are grounded in your documents via Endee vector search.</p>
+        <div class="suggestions">
+          <div class="suggestion" onclick="fill(this)">What is this document about?</div>
+          <div class="suggestion" onclick="fill(this)">Summarize the key points</div>
+          <div class="suggestion" onclick="fill(this)">What are the main conclusions?</div>
+          <div class="suggestion" onclick="fill(this)">Who are the key people mentioned?</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-bar">
+      <div class="input-box">
+        <textarea id="qInput" rows="1" placeholder="Ask a question… (Enter to send)" oninput="resize(this)" onkeydown="onKey(event)"></textarea>
+      </div>
+      <button class="btn-send" id="btnSend" onclick="ask()" title="Send">➤</button>
+    </div>
+  </div>
+
+</main>
 
 <script>
   const API = 'http://localhost:8000';
+  let selectedFile = null;
 
+  // ── Health ──
+  async function ping() {
+    try {
+      const r = await fetch(`${API}/health`);
+      const ok = r.ok;
+      document.getElementById('dot').className = 'status-dot ' + (ok ? 'online' : 'offline');
+      document.getElementById('statusText').textContent = ok ? 'API online' : 'API offline';
+      if (ok) { loadStats(); loadDocs(); }
+    } catch {
+      document.getElementById('dot').className = 'status-dot offline';
+      document.getElementById('statusText').textContent = 'API offline';
+    }
+  }
+
+  // ── Stats ──
+  async function loadStats() {
+    try {
+      const d = await fetch(`${API}/api/v1/stats`).then(r => r.json());
+      document.getElementById('sVectors').textContent = d.vector_count ?? '—';
+      document.getElementById('sDocs').textContent    = d.documents_indexed ?? '—';
+      document.getElementById('sDim').textContent     = d.dimension ?? '384';
+    } catch {}
+  }
+
+  // ── Docs ──
+  async function loadDocs() {
+    try {
+      const d = await fetch(`${API}/api/v1/documents`).then(r => r.json());
+      const list = document.getElementById('docList');
+      if (!d.documents.length) {
+        list.innerHTML = '<div class="empty-docs">No documents yet</div>';
+        return;
+      }
+      list.innerHTML = d.documents.map(doc => `
+        <div class="doc-item">
+          <span class="doc-icon">${doc.endsWith('.pdf') ? '📕' : '📝'}</span>
+          <span class="doc-name" title="${doc}">${doc}</span>
+          <button class="btn-del" onclick="del('${doc}')" title="Remove">✕</button>
+        </div>
+      `).join('');
+    } catch {}
+  }
+
+  async function del(name) {
+    try {
+      await fetch(`${API}/api/v1/documents/${encodeURIComponent(name)}`, { method: 'DELETE' });
+      loadDocs(); loadStats();
+    } catch {}
+  }
+
+  // ── File select ──
+  const fileInput = document.getElementById('fileInput');
+  fileInput.addEventListener('change', e => {
+    selectedFile = e.target.files[0];
+    if (selectedFile) {
+      document.getElementById('uploadTitle').textContent = selectedFile.name;
+      document.getElementById('uploadArea').style.borderColor = 'var(--accent)';
+      document.getElementById('uploadArea').style.background  = 'var(--accent-dim)';
+      document.getElementById('btnIngest').disabled = false;
+    }
+  });
+
+  const ua = document.getElementById('uploadArea');
+  ua.addEventListener('dragover', e => { e.preventDefault(); ua.classList.add('dragging'); });
+  ua.addEventListener('dragleave', () => ua.classList.remove('dragging'));
+  ua.addEventListener('drop', e => {
+    e.preventDefault(); ua.classList.remove('dragging');
+    if (e.dataTransfer.files[0]) { fileInput.files = e.dataTransfer.files; fileInput.dispatchEvent(new Event('change')); }
+  });
+
+  // ── Ingest ──
   async function ingest() {
-    const file = document.getElementById('fileInput').files[0];
-    if (!file) return alert('Pick a file first');
-
+    if (!selectedFile) return;
     const btn = document.getElementById('btnIngest');
+    const msg = document.getElementById('ingestMsg');
     btn.disabled = true;
-    btn.textContent = 'Ingesting...';
-    document.getElementById('ingestStatus').textContent = '';
+    btn.textContent = 'Ingesting…';
+    msg.textContent = '';
 
     const form = new FormData();
-    form.append('file', file);
+    form.append('file', selectedFile);
 
     try {
       const r = await fetch(`${API}/api/v1/ingest`, { method: 'POST', body: form });
       const d = await r.json();
       if (r.ok) {
-        document.getElementById('ingestStatus').textContent = `✓ ${d.chunks_indexed} chunks indexed from "${d.filename}"`;
-        document.getElementById('ingestStatus').className = 'ok';
+        msg.textContent = `✓ ${d.chunks_indexed} chunks indexed`;
+        msg.className = 'ingest-msg ok';
+        document.getElementById('uploadTitle').textContent = 'Drop file or click to browse';
+        document.getElementById('uploadArea').style.borderColor = '';
+        document.getElementById('uploadArea').style.background  = '';
+        selectedFile = null;
+        loadDocs(); loadStats();
       } else {
-        document.getElementById('ingestStatus').textContent = `✗ ${d.detail}`;
-        document.getElementById('ingestStatus').className = 'err';
+        msg.textContent = `✗ ${d.detail}`;
+        msg.className = 'ingest-msg err';
       }
     } catch {
-      document.getElementById('ingestStatus').textContent = '✗ Could not reach API';
-      document.getElementById('ingestStatus').className = 'err';
+      msg.textContent = '✗ Could not reach API';
+      msg.className = 'ingest-msg err';
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Upload & Ingest';
+      btn.textContent = 'Ingest Document';
     }
   }
 
-  async function query() {
-    const q = document.getElementById('question').value.trim();
+  // ── Ask ──
+  async function ask() {
+    const input = document.getElementById('qInput');
+    const q = input.value.trim();
     if (!q) return;
 
-    const btn = document.getElementById('btnQuery');
-    btn.disabled = true;
-    document.getElementById('status').textContent = 'searching...';
-    document.getElementById('answer').textContent = '—';
+    document.getElementById('welcome')?.remove();
+    addMsg('user', q);
+    input.value = ''; resize(input);
+    document.getElementById('btnSend').disabled = true;
+
+    const thinkId = addThinking();
 
     try {
       const r = await fetch(`${API}/api/v1/query`, {
@@ -148,25 +676,75 @@
         body: JSON.stringify({ question: q, top_k: 5 })
       });
       const d = await r.json();
+      removeEl(thinkId);
+
       if (r.ok) {
-        document.getElementById('answer').textContent = d.answer;
-        const sources = [...new Set(d.sources.map(s => s.source))].join(', ');
-        document.getElementById('status').textContent = `sources: ${sources} · ${d.retrieval_ms}ms retrieval · ${d.generation_ms}ms generation`;
+        const sources = [...new Set(d.sources.map(s => s.source))];
+        addMsg('bot', d.answer, sources, d.retrieval_ms, d.generation_ms);
       } else {
-        document.getElementById('answer').textContent = d.detail || 'Error';
-        document.getElementById('status').textContent = '';
+        addMsg('bot', `⚠ ${d.detail || 'Something went wrong'}`);
       }
     } catch {
-      document.getElementById('answer').textContent = 'Could not reach API';
-      document.getElementById('status').textContent = '';
+      removeEl(thinkId);
+      addMsg('bot', '⚠ Could not reach API. Is the server running?');
     } finally {
-      btn.disabled = false;
+      document.getElementById('btnSend').disabled = false;
     }
   }
 
-  document.getElementById('question').addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); query(); }
-  });
+  function addMsg(role, text, sources, retMs, genMs) {
+    const chat = document.getElementById('chatBody');
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+
+    let html = `<div class="bubble">${esc(text)}</div>`;
+
+    if (role === 'bot') {
+      let footer = '';
+      if (retMs) footer += `<span>${retMs}ms retrieval</span>`;
+      if (genMs) footer += `<span>· ${genMs}ms generation</span>`;
+      if (sources?.length) sources.forEach(s => { footer += `<span class="source-tag">📄 ${esc(s)}</span>`; });
+      if (footer) html += `<div class="msg-footer">${footer}</div>`;
+    }
+
+    div.innerHTML = html;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function addThinking() {
+    const id = 'th_' + Date.now();
+    const chat = document.getElementById('chatBody');
+    const div = document.createElement('div');
+    div.id = id; div.className = 'msg bot';
+    div.innerHTML = `<div class="thinking"><div class="dots"><span></span><span></span><span></span></div>Searching Endee index…</div>`;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return id;
+  }
+
+  function removeEl(id) { document.getElementById(id)?.remove(); }
+
+  function fill(el) {
+    document.getElementById('qInput').value = el.textContent;
+    document.getElementById('qInput').focus();
+  }
+
+  function onKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(); }
+  }
+
+  function resize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  }
+
+  ping();
+  setInterval(ping, 20000);
 </script>
 </body>
 </html>
