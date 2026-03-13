@@ -1,1 +1,36 @@
+# Environment
 .env
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Testing
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# DocuRAG runtime files
+.docurag_registry.json
+data/uploads/
+
+# Docker
+*.log
+
+# macOS
+.DS_Store
